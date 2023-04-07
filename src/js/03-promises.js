@@ -1,52 +1,47 @@
 import Notiflix from 'notiflix';
+import 'notiflix/dist/notiflix-3.2.6.min.css';
 
-const labels = Array.from(document.querySelectorAll('label'));
-const inputs = Array.from(document.querySelectorAll('input'));
-const form = document.querySelector('.form');
-const submitBtn = document.querySelector(`button[type="submit"]`);
+const formRef = document.querySelector('.form');
 
-submitBtn.style.fontSize = '15px';
-submitBtn.style.padding = '5px';
+formRef.addEventListener('submit', onSubmitForm);
 
-for (const label of labels) {
-  label.style.display = 'inline-block';
-  label.style.fontSize = '15px';
-  label.style.fontWeight = '600';
-}
-
-for (const input of inputs) {
-  input.style.display = 'block';
-  input.style.padding = '5px';
-  input.style.fontSize = '15px';
-}
-
-const createPromise = (position, delay) => {
+function createPromise(position, delay) {
+  const shouldResolve = Math.random() > 0.3;
   return new Promise((resolve, reject) => {
-    let setTime = setTimeout(() => {
-      const shouldResolve = Math.random() > 0.3;
+    setTimeout(() => {
       if (shouldResolve) {
+        // Fulfill
         resolve({ position, delay });
       } else {
+        // Reject
         reject({ position, delay });
       }
     }, delay);
   });
-};
+}
 
-form.addEventListener('submit', event => {
-  event.preventDefault();
-  const valueAmount = Number(form.elements.amount.value);
-  const valueStep = Number(form.elements.step.value);
-  const valueDelay = Number(form.elements.delay.value);
+function onSubmitForm(e) {
+  e.preventDefault();
 
-  for (let i = 1; i <= valueAmount; i += 1) {
-    let stepTime = valueDelay + valueStep * (i - 1);
-    createPromise(i, stepTime)
+  const {
+    elements: { delay: delayRef, step: stepRef, amount: amountRef },
+  } = formRef;
+
+  let position = 1;
+  let delay = Number(delayRef.value);
+  const amount = Number(amountRef.value);
+  while (position <= amount) {
+    createPromise(position, delay)
       .then(({ position, delay }) => {
-        Notiflix.Notify.success(`✅ Fulfilled promise ${position} in ${delay} ms`)
+        Notiflix.Notify.success(
+          `✅ Fulfilled promise ${position} in ${delay}ms`
+        );
       })
       .catch(({ position, delay }) => {
-       Notiflix.Notify.failure(`❌ Rejected promise ${position} in ${delay} ms`)
+        Notiflix.Notify.failure(
+          `❌ Rejected promise ${position} in ${delay}ms`
+        );
       });
+    delay += Number(stepRef.value);
+    position += 1;
   }
-});
